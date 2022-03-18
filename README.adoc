@@ -1,0 +1,228 @@
+ifdef::env-github[]
+:tip-caption: :bulb:
+endif::[]
+
+= Demoprojekt: Cloud-native Entwicklung mit AWS
+
+
+Das vorliegende Projekt bezieht sich auf den Vortrag "Cloud-native entwickeln mit AWS" und stellt die praktische Demo zu den dort vermittelten theoretischen Inhalten dar.
+Mit dem Code im Repository kann man man mit wenigen Instruktionen eine kleine Anwendung in der AWS-Cloud deployen, welche aus dem Internet erreichbar ist.
+Hierbei werden die "gängigen" Services von AWS genutzt, so dass sich der Entwickler nicht um den Aufbau und Betrieb dieser Infrastrukturen bemühen muss und sehr schnell in die Implementierung der Fachlichkeit einsteigen kann.
+
+Inhaltlich wird eine Taschenrechner-App mit Historienfunktion zusammengebaut und in Betrieb genommen.
+Ziel ist es, einen einfachen Einstieg in das Thema zu bieten und dem Nutzer zu ermöglichen, unterschiedliche Aspekte anhand einer lauffähigen Anwendung auszuprobieren und erlernen zu können.
+Das Projekt ist ausdrücklich nicht als Blaupause für Cloud-native Entwicklung mit dem Anspruch produktiver Nutzbarkeit gedacht, da nicht alle sich daraus ergebenden Anforderungen aufgegriffen wurden, z.B. Sicherheitsaspekte.
+
+Die Umgebung, welche aufgesetzt wird, bedient sich der kostengünstigsten erhältlichen AWS-Dienste.
+Ein Zyklus aufbauen-hochfahren-testen-herunterfahren-abbauen kostet typischerweise nur wenige Cent.
+Wir weisen darauf hin, dass wir von genau diesem Nutzungsmuster ausgehen.
+Wenn die Umgebung nach dem Test im laufenden Zustand hinterlassen wird, können höhere Kosten entstehen.
+
+In den folgenden Kapiteln wird Aufbau und Inbetriebnahme der Demo-Anwendung Schritt für Schritt erklärt.
+Wir gehen von der Nutzung eines Windows-Clients aus.
+
+== Voraussetzungen
+
+Voraussetzung für die Nutzung des Codes im Repository: Das AWS Commandline interface und Terraform müssen auf dem lokalen Client installiert sein.
+Außerdem ist ein Client des Versionierungstools Git erforderlich.
+Weiterhin gehen wir davon aus, dass dem Nutzer eine AWS-Subscription zur Verfügung steht und er administrative Rechte hat.
+Weitere Informationen dazu: https://repost.aws/de/knowledge-center/create-and-activate-aws-account
+
+== Lokales Setup für Git, AWS CLI und Terraform unter Windows
+
+=== Git installieren, falls nicht vorhanden
+
+Für die Installation von Git unter Windows stehen unterschiedliche Clients zur Verfügung:
+. https://git-scm.com/download/win
+Die Installation ist jeweils auf der Webseite beschrieben
+
+=== AWS CLI und Terraform installieren
+
+Für das AWS CLI stellt Amazon einen Installer bereit:
+
+. https://awscli.amazonaws.com/AWSCLIV2.msi herunterladen und installieren.
+
+Details dazu findet man unter https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2-windows.html.
+
+Terraform wird als "Executable" verteilt, d.h. für die Installation ist folgendermaßen vorzugehen:
+
+. Terraform von https://www.terraform.io/downloads.html herunterladen
+. Archiv an geeignete Stelle entpacken, z.B. C:\terraform
+. diesen Ordner in der Umgebungsvariable PATH ergänzen:
+.. Klick auf Start und "Umgebung" in die Suche eingeben.
+.. "Systemumgebungsvariablen bearbeiten" öffnen.
+.. Klick auf den Knopf "Umgebungsvariablen" und dann in der unteren Liste auf die "Path" Variable.
+.. Mit "Neu" den gewünschten Pfad hinzufügen.
+
+=== Grundinstallationen prüfen
+
+Nach der Grundinstallation sollten die Tools an der Kommandozeile grundsätzlich verfügbar sein.
+Das kann folgendermaßen getestet werden:
+
+. die Eingabeaufforderung starten
+.. am prompt die Instruktion "git" eingeben und mit Enter bestätigen, das tool sollte mit einem Nutzungshinweis antworten
+.. am prompt die Instruktion "terraform" eingeben und mit Enter bestätigen, das tool sollte mit einem Nutzungshinweis antworten
+.. am prompt die Instruktion "aws" eingeben und mit Enter bestätigen, das tool sollte mit einem Nutzungshinweis antworten
+
+== Konfiguration der Umgebung
+
+=== Einen Zugriffsschlüssel für AWS CLI erzeugen
+
+Für die Nutzung der AWS API und die Ablage des Codes in der Git Versionsverwaltung in der AWS-Umgebung muss zunächst ein Nutzer angelegt werden.
+Hierzu geht man folgendermaßen vor:
+
+. Anmeldung an der AWS-Managementkonsole, falls noch nicht geschehen einen Admin-User anlegen, nie mit dem Root-User arbeiten.
+  Falls bereits ein Admin-User vorhanden ist, können die Schritte bis 5d übersprungen werden.
+. In der Suche oben links "IAM" eingeben, zu IAM wechseln
++
+image::images/iam.png[]
+. Auf Benutzer klicken, neuen Benutzer anlegen
++
+image::images/Neuer_Nutzer.png[]
+. Name vergeben
++
+image::images/Nutzer_Name.png[]
+. Richtlinien zuweisen:
+.. rechts auf direkte Zuweisung klicken
+.. nach "Admin" suchen
+.. die Richtlinie AdministratorAccess zuweisen
++
+image::images/Nutzer_Rollen.png[]
+
+.. analog nach "CodeCommit" suchen
+.. die Richtlinie AWSCodeCommitFullAccess zuweisen
+. Zugriffsschlüssel erzeugen und herunterladen
+.. auf die Registrierkarte Sicherheitsanmeldeinformation wechseln
++
+image::images/Anmeldeinfo.png[]
+.. Weiter unter Zugriffsschlüssel suchen und den Button "Zugriffsschlüssel erstellen" klicken
++
+image::images/Zugriffsschluessel.png[]
+.. Option CLI auswählen, "Weiter" klicken, im unteren Bereich den Haken setzen, dass man die Warnung verstanden hat und fortfahren
++
+image::images/CLI.png[]
+
+.. keinen TAG setzen und Zugriffsschlüssel erzeugen und herunterladen
++
+image::images/TAG.png[]
+
+. Credentials für Git erzeugen und herunterladen
+.. auf die Registrierkarte Sicherheitsanmeldeinformation wechseln
++
+image::images/Anmeldeinfo.png[]
+.. weiter unten unter HTTPS-Git-Anmeldeinformationen für AWS CodeCommit den Button "Generieren von Anmeldeinformationen" betätigen und die Anmeldeinformation herunterladen
++
+image::images/Codecommit_credentials.png[]
+
+
+=== AWS CLI konfigurieren
+
+Das AWS CLI kann auf zwei Arten konfiguriert werden, per Command Line oder per Konfigurationsdatei.
+Im Ergebnis erzeigen beide Methoden die gleichen Konfigurationsdateien.
+Die offizielle Dokumentation von AWS dazu: https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-quickstart.html
+
+Benötigt wird der heruntergeladene Zugriffsschlüssel aus dem letzten Schritt.
+
+==== Konfiguration per Command Line
+
+Siehe https://docs.aws.amazon.com/cli/latest/userguide/getting-started-quickstart.html:
+
+. `aws configure` ausführen,
+. `AWS Access Key ID` ist `Zugriffsschlüssel-ID`,
+. `AWS Secret Access Key` ist `Geheimer Zugriffsschlüssel`,
+. `Default region name` auf `eu-central-1` setzen,
+. `Default output format` auf `json` setzen.
+
+==== Konfiguration per Konfigurationsdatei
+
+Siehe https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html:
+
+. Ins HOME-Verzeichnis des aktuell verwendeten Users wechseln
+. darin den Ordner .aws anlegen (oder dorthin wechseln)
+. in diesem Ordner die Dateien 'config' und 'credentials' anlegen (falls nicht vorhanden)
+. folgende Inhalte einfügen:
+
+config:
+----
+[default]
+region = eu-central-1
+output = json
+----
+
+credentials:
+----
+[default]
+aws_access_key_id=AWS Access Key ID
+aws_secret_access_key=Geheimer Zugriffsschlüssel
+aws_session_token=Session Token
+----
+
+== Aufbau der Infrastruktur
+
+Nach Installation und konfiguration ist der Client bereit, die nötige Infrastruktur in der AWS Cloud aufzusetzen.
+Dazu müssen folgende Befehle im terraform-Unterordner dieses Projekts ausgeführt werden:
+
+* `terraform init` initialisiert benötigte Provider (erstellt terraform/.terraform)
+* `terraform validate` validiert Terraform Dateien
+* `terraform fmt` formatiert Terraform Dateien
+* `terraform apply` ermittelt auszuführende Änderungen und führt diese nach Bestätigung durch "yes" aus
+
+TIP: In der Datei terraform/terraform.tfvars ist der globale Anwendungsname konfiguriert.
+Viele Objekte basieren auf dem Namen.
+Per Default ist "app" hinterlegt: `app_repo_name = "app"`
+
+Die letzte Instruktion dauert einige Minuten.
+Am Ende sollte eine Erfolgsmeldung angezeigt werden, außerdem wird der Hyperlink ausgegeben, unter welchem die Anwendung später erreichbar sein wird.
+Weiterhin wird ein Hyperlink ausgegeben, unter welchem das git-Repository erreichbar ist.
+
+image::images/terraform_out.png[]
+
+Falls "apply" scheitert, sollte mit "destroy" zurückgebaut und von vorn begonnen werden.
+
+* `terraform destroy` löscht alle erstellten Terraform Ressourcen nach Bestätigung durch "yes"
+
+
+
+Terraform speichert lokal Informationen zu den angelegten Ressourcen in der Datei terraform.tfstate.
+Diese Datei bitte nur löschen, wenn keine Ressourcen mehr von Terraform verwaltet werden (nach erfolgreichem `destroy`).
+Ohne diese Datei kennt Terraform die angelegten Ressourcen nicht mehr, und man muss sie von Hand löschen (einige Ressourcen sind auch mühselig nach Terraform importierbar).
+
+=== Konfiguration des Git Clients
+
+
+Für die Konfiguration des Git-Clients aktiviert man zunächst den Credential store:
+
+. an der Kommandozeile das Kommando `git config credential.helper store` absetzen
+
+Danach benutzt man die heruntergeladenen Anmeldeinformationen(siehe oben), um das Repo zu konfigurieren:
+In der Datei $HOME/.git-credentials (normalerweise C:\Benutzer\[Benutzername]\.git-credentials) wird folgende Zeile eingefügt:
+----
+https://[user_aus_heruntergeladener_Anmeldeinfo]:[Passwort]@git-codecommit.eu-central-1.amazonaws.com
+----
+
+Danach kann dieses Repo ohne die Eingabe von Credentials aus dem Git-Client heraus benutzt werden.
+
+== Anwendung nach CodeCommit pushen
+
+Um die Anwendung im Cloudmandanten zu bauen und zu deployen, muss nur der gesamte Inhalt dieses Repositorys ins AWS-CodeCommit-Repo gepushed werden.
+Hierzu geht man folgendermaßen vor:
+
+. In den Wurzelordner des Repositories wechseln.
+. neues remote-Repo konfigurieren.
+. push in neues remote-Repo
+
+Das kann mit folgenden befehlen von der Kommandozeile gemacht werden:
+----
+cd [Wurzelordner_des_Projekts]
+git remote add origin_aws  https://git-codecommit.eu-central-1.amazonaws.com/v1/repos/[app_repo_name] (siehe oben, Konfiguration)
+git push origin_aws
+----
+
+Dieser Commit startet die Pipeline in der AWS-Umgebung.
+Sobald diese komplett durchgelaufen ist, ist die Anwendung aus dem Internet erreichbar.
+Der Hyperlink wird am Ende von "terraform apply" ausgegeben (siehe oben)
+
+== Empfehlungen für den Umgang mit der Demo
+
+Nach Abschluss der Tests ist es grundsätzlich ratsam, die komplette Umgebung per "terraform destroy" wieder abzubauen.
+Der angelegte User kann auch gelöscht werden.

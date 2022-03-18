@@ -1,0 +1,79 @@
+server:
+  port: 8910
+  ssl:
+    enabled: false
+  shutdown: graceful
+management:
+  server:
+    port: 8081
+    ssl:
+      enabled: false
+  endpoints:
+    enabled-by-default: false
+    web:
+      base-path: /
+      exposure:
+        include: info, health
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      enabled: true
+      show-details: always
+    info:
+      enabled: true
+  health:
+    livenessstate:
+      enabled: true
+    readinessstate:
+      enabled: true
+spring:
+  application:
+    name: cn-app
+  lifecycle:
+    timeout-per-shutdown-phase: 30s
+  datasource:
+    url: jdbc:h2:mem:testdb
+    driverClassName: org.h2.Driver
+    username: sa
+    password: password
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.xml
+calculator:
+  maxResultsHistory: 20
+---
+spring:
+  config:
+    activate:
+      on-profile: postgres-local
+  datasource:
+    url: jdbc:postgresql://192.168.29.99/postgres?currentSchema=public
+    driverClassName: org.postgresql.Driver
+    username: postgres
+    password: password
+  jpa:
+    properties:
+      hibernate:
+        default_schema: public
+        dialect: org.hibernate.dialect.PostgreSQL95Dialect
+---
+spring:
+  config:
+    activate:
+      on-profile: ecs
+  datasource:
+    url: jdbc:postgresql://${SECRET_DB_HOST}:${SECRET_DB_PORT}/${SECRET_DB_NAME}?currentSchema=public&ssl=true&sslmode=verify-full&sslfactory=org.postgresql.ssl.DefaultJavaSSLFactory
+    driverClassName: org.postgresql.Driver
+    username: ${SECRET_DB_USERNAME}
+    password: ${SECRET_DB_PASSWORD}
+  jpa:
+    properties:
+      hibernate:
+        default_schema: public
+        dialect: org.hibernate.dialect.PostgreSQL95Dialect

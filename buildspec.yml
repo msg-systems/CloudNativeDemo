@@ -1,0 +1,35 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      java: corretto17
+    commands:
+      - apt update
+      - apt install -yy jq
+      - apt install -yy libgtk2.0-0 libgtk-3-0 libgbm-dev libnotify-dev libgconf-2-4 libnss3 libxss1 libasound2 libxtst6 xauth xvfb
+  pre_build:
+    commands:
+      - export ECR_PASSWORD=$(aws ecr get-login-password --region $AWS_DEFAULT_REGION --output text)
+      - export VERSION=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)-$(date "+%Y%m%d-%H%M%S")
+  build:
+    commands:
+      - echo Build started on `date` to build version ${VERSION}
+      - ./mvnw versions:set -DnewVersion=${VERSION} -DgenerateBackupPoms=false
+      - ./mvnw -B clean install docker:build docker:push
+      - aws ecs describe-task-definition --task-definition ${RELEASE_NAME}-ecs | jq '.taskDefinition' | jq --arg image "${ECR_REPO}:${VERSION}" '.containerDefinitions[0].image = $image' | tee taskdef.json
+      - envsubst < appspec_template.yaml | tee appspec.yaml
+  post_build:
+    commands:
+      - echo Build completed on `date`
+      - |
+        if [ "${CODEBUILD_BUILD_SUCCEEDING}" = "1" ]; then
+          docker images
+        fi
+artifacts:
+  files:
+    - appspec.yaml
+    - taskdef.json
+cache:
+  paths:
+    - '/root/.m2/**/*'

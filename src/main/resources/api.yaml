@@ -1,0 +1,110 @@
+openapi: 3.0.0
+info:
+  title: Cloud Native Calculator API
+  description: Descripts API of backend endpoints
+  version: 1.0.0
+servers:
+  - url: http://localhost:8910/api
+paths:
+  /calculator/calculate:
+    post:
+      summary: Calculates the result of leftOperand operation rightOperand
+      tags:
+        - calculator
+      operationId: calculateResult
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CalculateRequest'
+            example:
+              leftOperand: 1
+              rightOperand: 2
+              operation: "ADD"
+      responses:
+        '200':
+          description: Result was calculated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CalculateResponse'
+        '400':
+          description: Bad request.
+            Missing properties, unknown operation, divistion by zero
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /calculator/history:
+    get:
+      summary: Gets the history of calculations and their results.
+      tags:
+        - calculator
+      operationId: calculatorHistory
+      responses:
+        '200':
+          description: history of calculations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CalculateResponse'
+    delete:
+      summary: Deletes the history of calculations and their results.
+      tags:
+        - calculator
+      operationId: deleteHistory
+      responses:
+        '204':
+          description: history has been deleted
+
+components:
+  schemas:
+    ErrorCode:
+      type: string
+      enum:
+        - DIVISION_BY_ZERO
+        - INTERNAL_ERROR
+        - INVALID_FORMAT
+        - INVALID_METHOD
+    Error:
+      type: object
+      properties:
+        code:
+          $ref: '#/components/schemas/ErrorCode'
+        message:
+          type: string
+    CalculatorOperation:
+      type: string
+      enum: [ADD, SUBTRACT, MULTIPLY, DIVIDE]
+    CalculateRequest:
+      type: object
+      properties:
+        leftOperand:
+          type: number
+        rightOperand:
+          type: number
+        operation:
+          $ref: '#/components/schemas/CalculatorOperation'
+      required:
+        - leftOperand
+        - rightOperand
+        - operation
+    CalculateResponse:
+      type: object
+      properties:
+        leftOperand:
+          type: number
+        rightOperand:
+          type: number
+        operation:
+          $ref: '#/components/schemas/CalculatorOperation'
+        result:
+          type: number
+      required:
+        - leftOperand
+        - rightOperand
+        - operation
+        - result

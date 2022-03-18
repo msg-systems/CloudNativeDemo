@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.3.xsd">
+
+    <changeSet id="CalculatorHistoryEntryEntity" author="ChristianEhrhardt">
+        <createTable tableName="calculator_history_entity">
+            <column name="id" type="uuid">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="left_operand" type="number"/>
+            <column name="right_operand" type="number"/>
+            <column name="operation" type="varchar2"/>
+            <column name="result" type="number"/>
+        </createTable>
+    </changeSet>
+    <changeSet id="CalculatorHistoryEntryEntity_order" author="ChristianEhrhardt">
+        <addColumn tableName="calculator_history_entity">
+            <column name="created_at" type="timestamp" valueComputed="CURRENT_TIMESTAMP"/>
+        </addColumn>
+        <createIndex tableName="calculator_history_entity" indexName="calculator_history_created_at">
+            <column name="created_at" />
+        </createIndex>
+    </changeSet>
+</databaseChangeLog>

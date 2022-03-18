@@ -1,0 +1,31 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Cypress Tests (headless)" type="CypressConfigurationType" factoryName="Cypress" show_console_on_std_err="false" show_console_on_std_out="false">
+    <option name="allowRunningInParallel" value="false" />
+    <option name="envs">
+      <map />
+    </option>
+    <option name="passParentEnvs" value="true" />
+    <option name="programParameters" value="--config baseUrl=http://localhost:8080" />
+    <option name="projectPathOnTarget" />
+    <option name="selectedOptions">
+      <list />
+    </option>
+    <option name="workingDirectory" value="C:\Daten\DFS\cn-src\src\main\frontend\tests\e2e" />
+    <option name="textRange" />
+    <option name="allNames" />
+    <option name="specsDir" value="C:\Daten\DFS\cn-src\src\main\frontend\tests\e2e\specs" />
+    <option name="specFile" />
+    <option name="testName" />
+    <option name="workingDirectory" value="file://$PROJECT_DIR$/src/main/frontend/tests/e2e" />
+    <option name="envs">
+      <map />
+    </option>
+    <option name="additionalParams" value="--config baseUrl=http://localhost:8080" />
+    <option name="passParentEnvs" value="true" />
+    <option name="nodeJsRef" value="project" />
+    <option name="npmRef" value="Project" />
+    <option name="kind" value="DIRECTORY" />
+    <option name="interactive" value="false" />
+    <method v="2" />
+  </configuration>
+</component>

@@ -1,0 +1,3 @@
+In diesem Verzeichnis werden die generierten Dateien für den API-Client zum Backend abgelegt.
+Die Dateien werden durch das postinstall-Script generiert, dass mit "yarn install" oder dem Maven-Build des Moduls ausgeführt wird.
+
